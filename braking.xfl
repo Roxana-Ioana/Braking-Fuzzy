@@ -1,0 +1,102 @@
+operatorset opset {
+   and xfl.prod();
+   or xfl.max();
+   defuz xfl.FuzzyMean();
+}
+
+type speedT [0.0,10.0;256] {
+  slowest xfl.trapezoid(0.0,1.0E-7,1.4285714285714286,2.142857142857143);
+  slow xfl.trapezoid(1.4285714285714286,2.142857142857143,3.5714285714285716,4.285714285714286);
+  optimum xfl.trapezoid(3.5714285714285716,4.285714285714286,5.714285714285714,6.428571428571429);
+  fast xfl.trapezoid(5.714285714285714,6.428571428571429,7.857142857142858,8.571428571428571);
+  fastest xfl.trapezoid(7.857142857142858,8.571428571428571,10.0,10.714285714285714);
+  stopped xfl.singleton(0.0);
+}
+
+type brakingForce [0.0,100.0;256] {
+  softest xfl.triangle(-25.0,0.0,25.0);
+  soft xfl.triangle(0.0,25.0,50.0);
+  medium xfl.triangle(25.0,50.0,75.0);
+  hard xfl.triangle(50.0,75.0,100.0);
+  hardest xfl.triangle(75.0,100.0,125.0);
+}
+
+type distanceType [0.0,10.0;256] {
+  nearest xfl.triangle(-2.5,0.0,2.5);
+  near xfl.triangle(0.0,2.5,5.0);
+  medium xfl.triangle(2.5,5.0,7.5);
+  far xfl.triangle(5.0,7.5,10.0);
+  farthest xfl.triangle(7.5,10.0,12.5);
+}
+
+type distT [0.0,10.0;256] {
+  nearest xfl.trapezoid(-0.7142857142857143,0.0,1.4285714285714286,2.142857142857143);
+  near xfl.trapezoid(1.4285714285714286,2.142857142857143,3.5714285714285716,4.285714285714286);
+  medium xfl.trapezoid(3.5714285714285716,4.285714285714286,5.714285714285714,6.428571428571429);
+  far xfl.trapezoid(5.714285714285714,6.428571428571429,7.857142857142858,8.571428571428571);
+  farthest xfl.trapezoid(7.857142857142858,8.571428571428571,10.0,10.714285714285714);
+}
+
+type surface_type [-2.0,2.0;256] {
+  mf0 xfl.trapezoid(0.0,0.0,2.00001,2.00001);
+}
+
+type Tspeed [0.0,90.0;256] {
+  slowest xfl.sigma(15.5,-2.5500000000000003);
+  slow xfl.bell(30.0,9.0);
+  medium xfl.bell(45.0,10.0);
+  fast xfl.bell(60.0,9.0);
+  fastest xfl.sigma(67.5,2.5500000000000003);
+}
+
+type Tdist [0.0,80.0;256] {
+  nearest xfl.sigma(10.0,-2.266666666666667);
+  near xfl.bell(20.666666666666668,8.0);
+  medium xfl.bell(31.0,8.0);
+  far xfl.bell(43.333333333333336,8.0);
+  farthest xfl.sigma(50.0,2.266666666666667);
+}
+
+type Tbraking [0.0,10000.0;256] {
+  softest xfl.bell(0.0,1500.0);
+  soft xfl.bell(2500.0,1500.0);
+  medium xfl.bell(5000.0,1500.0);
+  hard xfl.bell(7500.0,1500.0);
+  hardest xfl.bell(10000.0,1500.0);
+}
+
+rulebase braking (Tspeed speed, Tdist distance : Tbraking force) using opset {
+  if(speed == slowest & distance == nearest) -> force = medium;
+  if(speed == slowest & distance == near) -> force = soft;
+  if(speed == slowest & distance == medium) -> force = softest;
+  if(speed == slowest & distance == far) -> force = softest;
+  if(speed == slowest & distance == farthest) -> force = softest;
+  
+  if(speed == slow & distance == nearest) -> force = hard;
+  if(speed == slow & distance == near) -> force = medium;
+  if(speed == slow & distance == medium) -> force = soft;
+  if(speed == slow & distance == far) -> force = softest;
+  if(speed == slow & distance == farthest) -> force = softest;
+  
+  if(speed == medium & distance == nearest) -> force = hard;
+  if(speed == medium & distance == near) -> force = hard;
+  if(speed == medium & distance == medium) -> force = medium;
+  if(speed == medium & distance == far) -> force = soft;
+  if(speed == medium & distance == farthest) -> force = softest;
+  
+  if(speed == fast & distance == nearest) -> force = hardest;
+  if(speed == fast & distance == near) -> force = hardest;
+  if(speed == fast & distance == medium) -> force = hard;
+  if(speed == fast & distance == far) -> force = medium;
+  if(speed == fast & distance == farthest) -> force = soft;
+  
+  if(speed == fastest & distance == nearest) -> force = hardest;
+  if(speed == fastest & distance == near) -> force = hardest;
+  if(speed == fastest & distance == medium) -> force = hardest;
+  if(speed == fastest & distance == far) -> force = hard;
+  if(speed == fastest & distance == farthest) -> force = medium;
+}
+
+system (Tspeed speed, Tdist distance : Tbraking force) {
+  braking(speed, distance : force);
+ }
